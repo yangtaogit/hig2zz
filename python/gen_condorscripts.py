@@ -19,11 +19,12 @@ NAME
 
 SYNOPSIS
 
-    ./gen_condorscripts.py  [option] [input_dir] [output_dir] 
+    ./gen_condorscripts.py  [option] [input_dir] [output_dir] [flag]
 
 option     : For Marling job ( option = 1 ) or Event selection ( option = 2 )
 input_dir  : Directory of Marlin Steer Files (option=1) or analyzed root files (option=2)  
 output_dir : Top directory for Condor jobs under where those generated scripts are going to be stored
+flag       : To be passed (for the moment, sel_event.py )
 
 AUTHOR 
     Ryuta Kiuchi <kiuchi@ihep.ac.cn> 
@@ -34,13 +35,15 @@ DATE
 
 
 def main():
-    args = sys.argv[1:]
-    if len(args) < 3:
+    args = sys.argv[2:]
+    if len(args) < 4:
         return usage()
 
+    channel_opt = int(sys.argv[1])
     opt = int(args[0])
     src = args[1]
     dst = args[2]
+    flag = args[3]
     
     if src.startswith('.'):                    
         src = src[2:]
@@ -120,7 +123,7 @@ def main():
         fout.write('  eLog_File=${Log_Dir}/${Time_Stamp}/err_${num}.txt                               \n') 
         fout.write('                                                                                  \n') 
         fout.write('  script_name=%s                                                                  \n' % script_name) 
-        fout.write('  hep_sub -g physics -o ${Log_File} -e ${eLog_File}  ${Work_Dir}/${script_name}   \n') 
+        fout.write('  hep_sub -o ${Log_File} -e ${eLog_File}  ${Work_Dir}/${script_name}   \n') 
         fout.write('done                                                                              \n') 
         fout.write('                                                                                  \n') 
         fout.close()
@@ -149,14 +152,14 @@ def main():
                 root_out = cwd + '/' + src_tmp + 'events/ana/' + file_tmp + '_event.root'
  
                 fout_script = open(outname,'w')
-                fout_script.write('#!/bin/bash                   \n') 
-                fout_script.write('                              \n') 
-                fout_script.write('cd %s                         \n' % cwd) 
-                fout_script.write('                              \n') 
-                fout_script.write('source setup.sh               \n')
-                fout_script.write('                              \n') 
-                fout_script.write('./python/sel_events.py  %s %s \n' % ( root_in, root_out ) ) 
-                fout_script.write('                              \n') 
+                fout_script.write('#!/bin/bash                      \n') 
+                fout_script.write('                                 \n') 
+                fout_script.write('cd %s                            \n' % cwd) 
+                fout_script.write('                                 \n') 
+                fout_script.write('source setup.sh                  \n')
+                fout_script.write('                                 \n') 
+                fout_script.write('./python/sel_events.py  %s %s %s %s \n' % ( channel_opt, root_in, root_out, flag ) ) 
+                fout_script.write('                                 \n') 
                 fout_script.close()
                 sys.stdout.write('Creating condor submit script %s \n'  % outname)
 
@@ -188,7 +191,7 @@ def main():
         fout.write('  eLog_File=${Log_Dir}/${Time_Stamp}/err_${num}.txt                               \n') 
         fout.write('                                                                                  \n') 
         fout.write('  script_name=%s                                                                  \n' % script_name) 
-        fout.write('  hep_sub -g physics -o ${Log_File} -e ${eLog_File}  ${Work_Dir}/${script_name}   \n') 
+        fout.write('  hep_sub -o ${Log_File} -e ${eLog_File}  ${Work_Dir}/${script_name}   \n') 
         fout.write('done                                                                              \n') 
         fout.write('                                                                                  \n') 
         fout.close()
